@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网文件</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/> -->
+</head>
+<body>
+    <div id="app">
+        <el-container>
+            <el-header>Header</el-header>
+            <el-main>Main</el-main>
+          </el-container>
+    </div>
+  </body>
+    <!-- import Vue before Element -->
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+      new Vue({
+        el: '#app',
+        data: function() {
+          return { visible: false }
+        }
+      })
+    </script>
+    <style>
+        .el-header, .el-footer {
+          background-color: #B3C0D1;
+          color: #333;
+          text-align: center;
+          line-height: 60px;
+        }
+        .el-main {
+          background-color: #E9EEF3;
+          color: #333;
+          text-align: center;
+          line-height: 160px;
+        }
+        
+        body > .el-container {
+          margin-bottom: 40px;
+        }
+        
+      </style>
+</html>
