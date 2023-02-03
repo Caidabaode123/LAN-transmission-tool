@@ -5,6 +5,7 @@ import com.example.lan_transmission_tool.dto.FileDesc;
 import lombok.AllArgsConstructor;
 import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,15 +25,15 @@ public class FileController {
 
     @PostMapping
     public synchronized String upload(@RequestParam("file")MultipartFile file,
-                         @RequestParam(required = false) String name) throws IOException {
+                         @RequestParam(required = false) String desc) throws IOException {
 
         String filename = file.getOriginalFilename();
-        name = StringUtils.hasLength(name)?name:filename;
-        filename = filename.substring(0,filename.lastIndexOf("."))
+
+        String realFilename = filename.substring(0,filename.lastIndexOf("."))
                 + System.currentTimeMillis()
                 +filename.substring(filename.lastIndexOf("."),filename.length());
 
-        File localFile = new File(resourceConfig.getFileRootPath()+filename);
+        File localFile = new File(resourceConfig.getFileRootPath()+realFilename);
 
         file.transferTo(localFile);
 
@@ -49,14 +50,19 @@ public class FileController {
             }
             transmission_tool_files.trim(deleteCount,size);
         }
-        transmission_tool_files.add(new FileDesc(new Date(),name,"/file/"+filename));
+        transmission_tool_files.add(new FileDesc(new Date(),filename,desc,"/file/"+realFilename));
         return localFile.getPath();
     }
 
     @GetMapping("/all")
     public List<Object> getAll(){
         RList<Object> list = redisson.getList(resourceConfig.getResourceRedisKey());
-        Collections.reverse(list);
-        return list;
+        List<Object> res = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(list)){
+            for (int i = 0; i < list.size(); i++) {
+                res.add(list.get(list.size()-i-1));
+            }
+        }
+        return res;
     }
 }

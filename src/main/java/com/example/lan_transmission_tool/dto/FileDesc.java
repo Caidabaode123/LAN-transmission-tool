@@ -12,5 +12,6 @@ import java.util.Date;
 public class FileDesc {
     private Date addTime;
     private String fileName;
+    private String desc;
     private String filePath;
 }

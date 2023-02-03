@@ -15,57 +15,40 @@
   <div id="app">
     <el-container>
       <el-header>
-        <el-button type="primary" style='position: absolute;right:20px;top:18px;' @click="dialogVisible = true">上传<i
-            class="el-icon-upload el-icon--right"></i></el-button>
+        <el-button type="primary" style='position: absolute;right:20px;top:18px;' @click="dialogVisible = true"><i
+            class="el-icon-upload el-icon--right"></i>上传</el-button>
       </el-header>
-      <el-main> 
-        <el-dialog :visible.sync="dialogVisible">
+      <el-main>
+        <el-dialog :visible.sync="dialogVisible" width="50%">
           <el-form ref="form" :model="form" label-width="80px">
-            <el-form-item label="活动名称">
-              <el-input v-model="form.name"></el-input>
+            <el-form-item>
+              <el-upload class="upload-demo" ref="upload" action="./file" :on-preview="handlePreview"
+                :on-remove="handleRemove" :file-list="fileList" :auto-upload="false" :data="uploadData"
+                :on-success="handleSuccess" :on-error="handleFail">
+                <el-button slot="trigger" type="primary">选取文件</el-button>
+              </el-upload>
             </el-form-item>
-            <el-form-item label="活动区域">
-              <el-select v-model="form.region" placeholder="请选择活动区域">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="活动时间">
-              <el-col :span="11">
-                <el-date-picker type="date" placeholder="选择日期" v-model="form.date1" style="width: 100%;"></el-date-picker>
-              </el-col>
-              <el-col class="line" :span="2">-</el-col>
-              <el-col :span="11">
-                <el-time-picker placeholder="选择时间" v-model="form.date2" style="width: 100%;"></el-time-picker>
-              </el-col>
-            </el-form-item>
-            <el-form-item label="即时配送">
-              <el-switch v-model="form.delivery"></el-switch>
-            </el-form-item>
-            <el-form-item label="活动性质">
-              <el-checkbox-group v-model="form.type">
-                <el-checkbox label="美食/餐厅线上活动" name="type"></el-checkbox>
-                <el-checkbox label="地推活动" name="type"></el-checkbox>
-                <el-checkbox label="线下主题活动" name="type"></el-checkbox>
-                <el-checkbox label="单纯品牌曝光" name="type"></el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-            <el-form-item label="特殊资源">
-              <el-radio-group v-model="form.resource">
-                <el-radio label="线上品牌商赞助"></el-radio>
-                <el-radio label="线下场地免费"></el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="活动形式">
-              <el-input type="textarea" v-model="form.desc"></el-input>
+            <el-form-item label="文件描述">
+              <el-input placeholder="文件描述" v-model="uploadData.desc"></el-input>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="onSubmit">立即创建</el-button>
-              <el-button>取消</el-button>
+              <el-button type="primary" @click="onSubmit" :disabled="uploading">上传</el-button>
+              <el-button @click="dialogVisible = false" style="position: absolute;right:0px;"
+                :disabled="uploading">取消</el-button>
             </el-form-item>
           </el-form>
         </el-dialog>
-        
+        <el-table :data="allFiles" style="width: 100%" ref="table" :key="tableKey">
+          <el-table-column prop="addTime" label="上传日期" :formatter="dateFormatter">
+          </el-table-column>
+          <el-table-column prop="fileName" label="文件名"></el-table-column>
+          <el-table-column prop="desc" label="文件描述" :formatter="descFormatter"></el-table-column>
+          <el-table-column prop="filePath" label="下载链接">
+            <template slot-scope="scope">
+              <el-link type="success" :href="getDownloadLink(scope.row)"><i class="el-icon-bottom"></i>下载该文件</el-link>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-main>
     </el-container>
   </div>
@@ -74,27 +57,117 @@
 <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
   new Vue({
     el: '#app',
     data() {
       return {
-        form: {
-          name: '',
-          region: '',
-          date1: '',
-          date2: '',
-          delivery: false,
-          type: [],
-          resource: '',
+        form: {},
+        uploadData: {
           desc: ''
         },
-        dialogVisible: false
+        fileList: [],
+        dialogVisible: false,
+        uploading: false,
+        allFiles: [],
+        tableKey: 0
+      }
+    },
+    mounted() {
+      this.getAllFile();
+    },
+    watch: {
+      dialogVisible(newVal, oldVal) {
+        if (newVal == false) {
+          this.uploadData.name = '';
+          this.fileList = [];
+        }
       }
     },
     methods: {
+      //上传触发
       onSubmit() {
-        console.log('submit!');
+        this.uploading = true;
+        this.$refs.upload.submit();
+      },
+      handleRemove(cFile, cFileList) {
+        this.fileList = [];
+      },
+      handlePreview(file) {
+        this.fileList[0] = file;
+      },
+      //上传成功
+      handleSuccess(response, cFile, cFileList) {
+        this.$notify({
+          title: '成功',
+          message: '上传成功',
+          type: 'success',
+          duration: 1500
+        });
+        this.uploadData.name = '';
+        this.fileList = [];
+        this.uploading = false;
+        this.getAllFile();
+      },
+      //上传失败
+      handleFail(response, cFile, cFileList) {
+        this.$notify({
+          title: '成功',
+          message: '上传失败',
+          type: 'warning',
+          duration: 1500
+        });
+        this.uploading = false;
+      },
+      //获取所有文件
+      getAllFile() {
+        var that = this;
+        axios.get("./file/all", null).then(function (res) {
+          that.allFiles = res.data;
+          // if (cFiles != null && cFiles != []) {
+          //   var length = cFiles.length;
+          //   for (i = 0; i < length; i++) {
+
+          //   }
+          // }
+          //   console.log(this.tableKey);
+          //   this.tableKey = this.tableKey+1;
+          //   console.log(this.tableKey);
+          // }
+        }).catch(function (err) {
+          console.log(err);
+        });
+      },
+      descFormatter(raw){
+        let desc = raw.desc;
+        return desc==null||desc==''?"暂无描述":desc;
+      },
+      dateFormatter(raw) {
+        let ms = raw.addTime;
+        if (ms) {
+          var oDate = new Date(ms),
+            oYear = oDate.getFullYear(),
+            oMonth = oDate.getMonth() + 1,
+            oDay = oDate.getDate(),
+            oHour = oDate.getHours(),
+            oMin = oDate.getMinutes(),
+            oSen = oDate.getSeconds(),
+            oTime = oYear + '-' + this.addZero(oMonth) + '-' + this.addZero(oDay) + ' ' + this.addZero(oHour) + ':' +
+              this.addZero(oMin) + ':' + this.addZero(oSen);
+          return oTime;
+        } else {
+          return ""
+        }
+      },
+      addZero(num) {
+        if (parseInt(num) < 10) {
+          num = "0" + num;
+        }
+        return num;
+      },
+      getDownloadLink(row){
+        return '.'+row.filePath;
       }
     }
   })
@@ -109,8 +182,12 @@
   .el-main {
     background-color: #E9EEF3;
     color: #333;
-    text-align: center;
-    line-height: 1000px;
+  }
+
+  @media screen and (max-width:600px) {
+    .el-dialog {
+      width: 90% !important;
+    }
   }
 </style>
 
