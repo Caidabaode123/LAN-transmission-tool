@@ -29,9 +29,10 @@ public class FileController {
 
         String filename = file.getOriginalFilename();
 
-        String realFilename = filename.substring(0,filename.lastIndexOf("."))
+        int firstDotIndex = filename.indexOf(".");
+        String realFilename = filename.substring(0, firstDotIndex)
                 + System.currentTimeMillis()
-                +filename.substring(filename.lastIndexOf("."),filename.length());
+                +filename.substring(firstDotIndex,filename.length());
 
         File localFile = new File(resourceConfig.getFileRootPath()+realFilename);
 
