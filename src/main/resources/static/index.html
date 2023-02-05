@@ -16,7 +16,7 @@
     <el-container>
       <el-header>
         <el-button type="primary" style='position: absolute;right:20px;top:18px;' @click="dialogVisible = true"><i
-            class="el-icon-upload el-icon--right"></i>上传</el-button>
+            class="el-icon-upload el-icon--right"></i><span class="mobile_hidden">上传</span></el-button>
       </el-header>
       <el-main>
         <el-dialog :visible.sync="dialogVisible" width="50%">
@@ -43,9 +43,9 @@
           </el-table-column>
           <el-table-column prop="fileName" label="文件名"></el-table-column>
           <el-table-column prop="desc" label="文件描述" :formatter="descFormatter"></el-table-column>
-          <el-table-column prop="filePath" label="下载链接">
+          <el-table-column prop="filePath" label="下载链接" align="center">
             <template slot-scope="scope">
-              <el-link type="success" :href="getDownloadLink(scope.row)"><i class="el-icon-bottom"></i>下载该文件</el-link>
+              <el-link type="success" :href="getDownloadLink(scope.row)"><i class="el-icon-bottom"></i><span class="mobile_hidden">下载该文件</span></el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -188,7 +188,11 @@
     .el-dialog {
       width: 90% !important;
     }
+    .mobile_hidden {
+      display: none;
+    }
   }
+
 </style>
 
 </html>
