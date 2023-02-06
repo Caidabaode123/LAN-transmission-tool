@@ -28,6 +28,7 @@ public class FileController {
                          @RequestParam(required = false) String desc) throws IOException {
 
         String filename = file.getOriginalFilename();
+        filename = filename.replace(" ","");
 
         int firstDotIndex = filename.indexOf(".");
         String realFilename = filename.substring(0, firstDotIndex)
