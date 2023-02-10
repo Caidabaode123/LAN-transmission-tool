@@ -88,6 +88,9 @@
     methods: {
       //上传触发
       onSubmit() {
+        if (this.fileList==[]||this.fileList==null||this.fileList.length==0){
+          return;
+        }
         this.uploading = true;
         this.$refs.upload.submit();
       },
